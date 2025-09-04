@@ -1,19 +1,19 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.signup = exports.login = void 0;
+exports.confirmEmail = exports.signup = exports.login = void 0;
 const zod_1 = require("zod");
-const validation_middle_ware_1 = require("../middleware/validation.middle.ware");
+const validation_middleware_1 = require("../middleware/validation.middleware");
 exports.login = {
     body: zod_1.z.strictObject({
-        email: validation_middle_ware_1.generalFields.email,
-        password: validation_middle_ware_1.generalFields.password,
+        email: validation_middleware_1.generalFields.email,
+        password: validation_middleware_1.generalFields.password,
     }),
 };
 exports.signup = {
     body: exports.login.body
         .extend({
-        username: validation_middle_ware_1.generalFields.username,
-        confirmPassword: validation_middle_ware_1.generalFields.confirmPassword,
+        username: validation_middleware_1.generalFields.username,
+        confirmPassword: validation_middleware_1.generalFields.confirmPassword,
     })
         .superRefine((data, ctx) => {
         if (data.confirmPassword !== data.password) {
@@ -23,5 +23,11 @@ exports.signup = {
                 message: "confirm password not match with password",
             });
         }
+    }),
+};
+exports.confirmEmail = {
+    body: zod_1.z.strictObject({
+        email: validation_middleware_1.generalFields.email,
+        otp: validation_middleware_1.generalFields.otp,
     }),
 };

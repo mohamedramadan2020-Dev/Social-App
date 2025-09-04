@@ -11,10 +11,6 @@ message:string,
 path:string|number|symbol|undefined
         }>
     }>
-
-    
-
-
 export const validation = (schema: SchemaType) => {
   return (req: Request, res: Response, next: NextFunction): NextFunction => {
 
@@ -47,6 +43,7 @@ if(validationErrors.length){
 export const generalFields={
       username: z.string().min(2).max(20),
       email: z.email(),
+      otp:z.string().regex(/^\d{6}$/),
       password: z
         .string()
         .regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/),
