@@ -41,7 +41,7 @@ export abstract class DataBaseRepository<TDocument> {
     options,
   }: {
     data: Partial<TDocument>[];
-    options: CreateOptions;
+    options?: CreateOptions;
   }): Promise<HydratedDocument<TDocument>[]> {
     return await this.model.create(data, options);
   }

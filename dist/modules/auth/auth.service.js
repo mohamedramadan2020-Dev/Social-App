@@ -6,6 +6,7 @@ const userModel_repository_1 = require("../../DB/repository/userModel.repository
 const hash_security_1 = require("../../utils/security/hash.security");
 const email_event_1 = require("../../utils/event/email.event");
 const otp_1 = require("../../utils/otp");
+const token_security_1 = require("../../utils/security/token.security");
 class AuthenticationService {
     userModel = new userModel_repository_1.UserRepository(User_model_1.UserModel);
     constructor() { }
@@ -62,8 +63,19 @@ class AuthenticationService {
         return res.status(200).json({ message: "Email Confirmed ✔" });
     };
     login = async (req, res) => {
-        const { email } = req.body;
-        return res.status(200).json({ message: "logedin ✔", data: { email } });
+        const { email, password } = req.body;
+        const user = await this.userModel.findOne({ filter: { email } });
+        if (!user) {
+            throw new error_response_1.NotFoundException("invlaid login data");
+        }
+        if (!user.confirmedAt) {
+            throw new error_response_1.BadRequestException("verifey your account first");
+        }
+        if (!await (0, hash_security_1.compareHash)(password, user.password)) {
+            throw new error_response_1.BadRequestException("invlaid login data");
+        }
+        const credentials = await (0, token_security_1.createLoginCredentials)(user);
+        return res.status(200).json({ message: "logedin ✔", data: { credentials } });
     };
 }
 exports.default = new AuthenticationService();

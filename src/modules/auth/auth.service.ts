@@ -1,5 +1,9 @@
 import type { Request, Response } from "express";
-import { IconfirmEmailInbutsDto, IsignupBodyInbutsDto } from "./auth.dto";
+import {
+  IconfirmEmailInbutsDto,
+  IloginBodyInbutsDto,
+  IsignupBodyInbutsDto,
+} from "./auth.dto";
 // import { DataBaseRepository } from "../../DB/repository/dataBase.repository";
 import { UserModel } from "../../DB/model/User.model";
 import {
@@ -11,6 +15,7 @@ import { UserRepository } from "../../DB/repository/userModel.repository";
 import { compareHash, genrateHash } from "../../utils/security/hash.security";
 import { emailEvent } from "../../utils/event/email.event";
 import { genrateNumperOtp } from "../../utils/otp";
+import { createLoginCredentials } from "../../utils/security/token.security";
 
 class AuthenticationService {
   private userModel = new UserRepository(UserModel);
@@ -78,8 +83,23 @@ class AuthenticationService {
   };
 
   login = async (req: Request, res: Response): Promise<Response> => {
-    const { email } = req.body;
-    return res.status(200).json({ message: "logedin ✔", data: { email } });
+    const { email, password }: IloginBodyInbutsDto = req.body;
+   const user = await this.userModel.findOne({ filter: { email } });
+
+    if(!user){
+       throw new NotFoundException("invlaid login data")
+    }
+if(!user.confirmedAt){
+  throw new BadRequestException("verifey your account first")
+}
+    if (!await compareHash(password,user.password)){
+
+      throw new BadRequestException("invlaid login data")
+    }
+
+const credentials= await createLoginCredentials(user)
+
+    return res.status(200).json({ message: "logedin ✔", data:{credentials}})
   };
 }
 

@@ -28,6 +28,16 @@ export class NotFoundException extends ApplicationException {
     super(message, 404,  cause );
   }
 }
+export class unauthorizedException extends ApplicationException {
+  constructor(message: string, cause?: unknown) {
+    super(message, 401,  cause );
+  }
+}
+export class forbiddenException extends ApplicationException {
+  constructor(message: string, cause?: unknown) {
+    super(message, 403,  cause );
+  }
+}
 export class conflictException extends ApplicationException {
   constructor(message: string, cause?: unknown) {
     super(message, 409,  cause );

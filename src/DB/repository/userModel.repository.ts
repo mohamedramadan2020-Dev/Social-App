@@ -1,4 +1,4 @@
-import { CreateOptions, HydrateOptions, Model } from "mongoose";
+import { CreateOptions,  Model } from "mongoose";
 import { IUser } from "../model/User.model";
 import { DataBaseRepository } from "./dataBase.repository";
 import { HydratedDocument } from "mongoose";
