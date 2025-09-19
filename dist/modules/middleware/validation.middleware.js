@@ -28,11 +28,11 @@ const validation = (schema) => {
 };
 exports.validation = validation;
 exports.generalFields = {
-    username: zod_1.z.string().min(2).max(20),
-    email: zod_1.z.email(),
+    username: zod_1.z.string({ error: "userName is required" }).min(2).max(20),
+    email: zod_1.z.email({ error: "valid email must be like example@domain.com" }),
     otp: zod_1.z.string().regex(/^\d{6}$/),
     password: zod_1.z
-        .string()
+        .string({ error: "invalid password" })
         .regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/),
     confirmPassword: zod_1.z.string(),
 };

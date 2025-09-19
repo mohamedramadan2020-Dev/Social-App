@@ -41,11 +41,11 @@ if(validationErrors.length){
 
 
 export const generalFields={
-      username: z.string().min(2).max(20),
-      email: z.email(),
+      username: z.string({error:"userName is required"}).min(2).max(20),
+      email: z.email({error:"valid email must be like example@domain.com"}),
       otp:z.string().regex(/^\d{6}$/),
       password: z
-        .string()
+        .string({error:"invalid password"})
         .regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/),
       confirmPassword: z.string(),
     }

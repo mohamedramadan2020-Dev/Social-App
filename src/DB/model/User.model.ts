@@ -8,6 +8,11 @@ export enum RoleEnum {
   user = "user",
   admin = "admin",
 }
+export enum providerEnum {
+  system = "system",
+  google = "google",
+}
+
 export interface IUser {
   _id: Types.ObjectId;
 
@@ -25,9 +30,11 @@ export interface IUser {
 
   phone?: string;
   address?: string;
-
+  profilImage?: string;
+  coverImage?:string
   gender: GenderEnum;
   role: RoleEnum;
+  provider: providerEnum;
 
   createdAt: Date;
   updatedAt?: Date;
@@ -41,15 +48,26 @@ const userSchema = new Schema<IUser>(
     confirmEmailOtp: { type: String },
     confirmedAt: { type: Date },
 
-    password: { type: String, required: true },
+    password: {
+      type: String,
+      required: function () {
+        return this.provider === providerEnum.google ? false : true;
+      },
+    },
     resetPasswordOtp: { type: String },
     changeCredentialsTime: { type: Date },
 
     phone: { type: String },
     address: { type: String },
-
+    profilImage: { type: String },
+    coverImage: { type: String },
     gender: { type: String, enum: GenderEnum, default: GenderEnum.male },
     role: { type: String, enum: RoleEnum, default: RoleEnum.user },
+    provider: {
+      type: String,
+      enum: providerEnum,
+      default: providerEnum.system,
+    },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
@@ -64,4 +82,4 @@ userSchema
     return this.firstName + " " + this.lastName;
   });
 export const UserModel = models.User || model<IUser>("User", userSchema);
-export type HUserDoucment = HydratedDocument<IUser>
+export type HUserDoucment = HydratedDocument<IUser>;

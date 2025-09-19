@@ -15,3 +15,13 @@ exports.emailEvent.on("confirmEmail", async (data) => {
         console.log("fail to send email", error);
     }
 });
+exports.emailEvent.on("resetPassword", async (data) => {
+    try {
+        data.subject = "Reset-Email-Password";
+        data.html = (0, verify_template_email_1.verifyEmail)({ otp: data.otp, title: "ResetPassword🔑" });
+        await (0, sendEmail_1.sendEmail)(data);
+    }
+    catch (error) {
+        console.log("fail to send email", error);
+    }
+});
