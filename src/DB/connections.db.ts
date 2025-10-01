@@ -8,7 +8,7 @@ const connectDB = async (): Promise<void> => {
     });
     await UserModel.syncIndexes();
     console.log(result.models);
-    console.log(`DB connected successfully 🐧`);
+    console.log(`DB connected successfully 🚀`);
   } catch (error) {
     console.log(`fail to connect DB ❌`);
   }

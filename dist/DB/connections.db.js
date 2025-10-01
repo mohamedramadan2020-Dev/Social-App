@@ -9,7 +9,7 @@ const connectDB = async () => {
         });
         await user_model_1.UserModel.syncIndexes();
         console.log(result.models);
-        console.log(`DB connected successfully 🐧`);
+        console.log(`DB connected successfully 🚀`);
     }
     catch (error) {
         console.log(`fail to connect DB ❌`);

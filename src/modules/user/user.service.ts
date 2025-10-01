@@ -36,7 +36,6 @@ import {
   conflictException,
   ForbiddenException,
   NotFoundRequestException,
-  UnauthorizedException,
 } from "../../utils/response/error.response";
 import { s3Event } from "../../utils/multer/s3.event";
 import { successResponse } from "../../utils/response/success.response";
