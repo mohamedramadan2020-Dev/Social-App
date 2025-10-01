@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TokenRepository = void 0;
-const dataBase_repository_1 = require("./dataBase.repository");
-class TokenRepository extends dataBase_repository_1.DataBaseRepository {
+const database_repository_1 = require("./database.repository");
+class TokenRepository extends database_repository_1.DatabaseRepository {
     model;
     constructor(model) {
         super(model);

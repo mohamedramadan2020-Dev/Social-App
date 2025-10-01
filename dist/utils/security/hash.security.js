@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.compareHash = exports.genrateHash = void 0;
+exports.compareHash = exports.generateHash = void 0;
 const bcrypt_1 = require("bcrypt");
-const genrateHash = async (plainText, salt = Number(process.env.SALT)) => {
-    return await (0, bcrypt_1.hash)(plainText, salt);
+const generateHash = async (plainText, saltRounds = Number(process.env.SALT) || 10) => {
+    return await (0, bcrypt_1.hash)(plainText, saltRounds);
 };
-exports.genrateHash = genrateHash;
+exports.generateHash = generateHash;
 const compareHash = async (plainText, hash) => {
     return await (0, bcrypt_1.compare)(plainText, hash);
 };

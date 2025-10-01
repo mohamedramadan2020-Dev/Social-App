@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetForgotPasswordCode = exports.verfiyForgotPasswordCode = exports.sendForgotPasswordCode = exports.signupWIthGmail = exports.confirmEmail = exports.signup = exports.login = void 0;
+exports.resetVerifyPassword = exports.verifyPasswordCode = exports.sendForgotPasswordCode = exports.signupWithGmail = exports.confirmEmail = exports.signup = exports.login = void 0;
 const zod_1 = require("zod");
-const validation_middleware_1 = require("../middleware/validation.middleware");
+const validation_middleware_1 = require("../../middleware/validation.middleware");
 exports.login = {
     body: zod_1.z.strictObject({
         email: validation_middleware_1.generalFields.email,
@@ -13,6 +13,8 @@ exports.signup = {
     body: exports.login.body
         .extend({
         username: validation_middleware_1.generalFields.username,
+        email: validation_middleware_1.generalFields.email,
+        password: validation_middleware_1.generalFields.password,
         confirmPassword: validation_middleware_1.generalFields.confirmPassword,
     })
         .superRefine((data, ctx) => {
@@ -20,7 +22,14 @@ exports.signup = {
             ctx.addIssue({
                 code: "custom",
                 path: ["confirmPassword"],
-                message: "confirm password not match with password",
+                message: "Password missMatch conformPassword",
+            });
+        }
+        if (data.username?.split(" ").length != 2) {
+            ctx.addIssue({
+                code: "custom",
+                path: ["username"],
+                message: "username must consist of 2 parts like ex: OSAMA MOHAMED",
             });
         }
     }),
@@ -31,26 +40,29 @@ exports.confirmEmail = {
         otp: validation_middleware_1.generalFields.otp,
     }),
 };
-exports.signupWIthGmail = {
+exports.signupWithGmail = {
     body: zod_1.z.strictObject({
-        idToken: zod_1.z.string()
-    })
+        idToken: validation_middleware_1.generalFields.idToken,
+    }),
 };
 exports.sendForgotPasswordCode = {
     body: zod_1.z.strictObject({
-        email: validation_middleware_1.generalFields.email
-    })
+        email: validation_middleware_1.generalFields.email,
+    }),
 };
-exports.verfiyForgotPasswordCode = {
+exports.verifyPasswordCode = {
     body: exports.sendForgotPasswordCode.body.extend({
-        otp: validation_middleware_1.generalFields.otp
-    })
+        otp: validation_middleware_1.generalFields.otp,
+    }),
 };
-exports.resetForgotPasswordCode = {
-    body: exports.verfiyForgotPasswordCode.body.extend({
+exports.resetVerifyPassword = {
+    body: exports.verifyPasswordCode.body
+        .extend({
+        otp: validation_middleware_1.generalFields.otp,
         password: validation_middleware_1.generalFields.password,
         confirmPassword: validation_middleware_1.generalFields.confirmPassword,
-    }).refine((data) => {
+    })
+        .refine((data) => {
         return data.password === data.confirmPassword;
-    }, { message: "password misMatch with confirm password", path: ["confirmPasword"] })
+    }, { message: "Password Mis Match Confirm Password" }),
 };

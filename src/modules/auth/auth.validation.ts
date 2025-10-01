@@ -1,5 +1,5 @@
-import { email, z } from "zod";
-import { generalFields } from "../middleware/validation.middleware";
+import { z } from "zod";
+import { generalFields } from "../../middleware/validation.middleware";
 
 export const login = {
   body: z.strictObject({
@@ -7,10 +7,13 @@ export const login = {
     password: generalFields.password,
   }),
 };
+
 export const signup = {
   body: login.body
     .extend({
       username: generalFields.username,
+      email: generalFields.email,
+      password: generalFields.password,
       confirmPassword: generalFields.confirmPassword,
     })
     .superRefine((data, ctx) => {
@@ -18,40 +21,55 @@ export const signup = {
         ctx.addIssue({
           code: "custom",
           path: ["confirmPassword"],
-          message: "confirm password not match with password",
+          message: "Password missMatch conformPassword",
+        });
+      }
+      if (data.username?.split(" ").length != 2) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["username"],
+          message: "username must consist of 2 parts like ex: OSAMA MOHAMED",
         });
       }
     }),
 };
+
 export const confirmEmail = {
   body: z.strictObject({
     email: generalFields.email,
     otp: generalFields.otp,
   }),
 };
-export const signupWIthGmail={
-  body:z.strictObject({
-idToken:z.string()
-  })
-}
-export const sendForgotPasswordCode ={
-  body:z.strictObject({
-email:generalFields.email
-  })
-}
-export const verfiyForgotPasswordCode ={
-  body:sendForgotPasswordCode.body.extend({
-otp:generalFields.otp
-  })
-}
-export const resetForgotPasswordCode ={
-  body:verfiyForgotPasswordCode.body.extend({
-password:generalFields.password,
-confirmPassword:generalFields.confirmPassword ,
 
-  }).refine((data)=>{
-    return data.password===data.confirmPassword
-  },{message:"password misMatch with confirm password",path:["confirmPasword"]})
+export const signupWithGmail = {
+  body: z.strictObject({
+    idToken: generalFields.idToken,
+  }),
+};
 
-  
-}
+export const sendForgotPasswordCode = {
+  body: z.strictObject({
+    email: generalFields.email,
+  }),
+};
+
+export const verifyPasswordCode = {
+  body: sendForgotPasswordCode.body.extend({
+    otp: generalFields.otp,
+  }),
+};
+
+export const resetVerifyPassword = {
+  body: verifyPasswordCode.body
+    .extend({
+      otp: generalFields.otp,
+      password: generalFields.password,
+      confirmPassword: generalFields.confirmPassword,
+    })
+    .refine(
+      (data) => {
+        return data.password === data.confirmPassword;
+      },
+      { message: "Password Mis Match Confirm Password" }
+    ),
+};

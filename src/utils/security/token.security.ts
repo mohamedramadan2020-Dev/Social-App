@@ -1,32 +1,39 @@
-import {v4 as uuid} from"uuid"
+import { v4 as uuid } from "uuid";
 import type { JwtPayload, Secret, SignOptions } from "jsonwebtoken";
 import { sign, verify } from "jsonwebtoken";
-import { HUserDoucment, RoleEnum, UserModel } from "../../DB/model/User.model";
-
+import {
+  type HUserDocument,
+  RoleEnum,
+  UserModel,
+} from "../../DB/model/user.model";
 import {
   BadRequestException,
-  unauthorizedException,
+  UnauthorizedException,
 } from "../response/error.response";
-import { UserRepository } from "../../DB/repository/userModel.repository";
+import { userRepository, TokenRepository } from "../../DB/repository/";
 import { HTokenDocument, TokenModel } from "../../DB/model/token.model";
-import { TokenRepository } from "../../DB/repository/token.repository";
-export enum signetureLevelEnum {
-  Bearer = "Bearer",
-  System = "System",
+
+export enum signatureLevelEnum {
+  bearer = "Bearer",
+  system = "System",
 }
-export enum tokenEnum {
+
+export enum TokenEnum {
   access = "access",
   refresh = "refresh",
 }
-export enum logoutEnum {
-  only= "only",
-all= "all",
+
+export enum LogoutEnum {
+  only = "only",
+  all = "all",
 }
 
-export const genrateToken = async ({
+export const generateToken = async ({
   payload,
   secret = process.env.ACCESS_USER_TOKEN_SIGNATURE as string,
-  options = { expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRES_IN) },
+  options = {
+    expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRES_IN),
+  } as SignOptions,
 }: {
   payload: object;
   secret?: Secret;
@@ -34,118 +41,130 @@ export const genrateToken = async ({
 }): Promise<string> => {
   return sign(payload, secret, options);
 };
-export const verifeyToken = async ({
+
+export const VerifyToken = async ({
   token,
   secret = process.env.ACCESS_USER_TOKEN_SIGNATURE as string,
 }: {
   token: string;
-  secret: Secret;
-}): Promise<JwtPayload>=> {
+  secret?: Secret;
+}): Promise<JwtPayload> => {
   return verify(token, secret) as JwtPayload;
 };
 
-export const detectSignetureLevel = async (
+export const detectSignature = async (
   role: RoleEnum = RoleEnum.user
-): Promise<signetureLevelEnum> => {
-  let signetureLevel: signetureLevelEnum = signetureLevelEnum.Bearer;
+): Promise<signatureLevelEnum> => {
+  let signatureLevel: signatureLevelEnum = signatureLevelEnum.bearer;
   switch (role) {
     case RoleEnum.admin:
-      signetureLevel = signetureLevelEnum.System;
+    case RoleEnum.superAdmin:
+      signatureLevel = signatureLevelEnum.system;
       break;
     default:
-      signetureLevel = signetureLevelEnum.Bearer;
+      signatureLevel = signatureLevelEnum.bearer;
       break;
   }
-  return signetureLevel;
+  return signatureLevel;
 };
 
-export const getSigneture = async (
-  signetureLevel: signetureLevelEnum = signetureLevelEnum.Bearer
-): Promise<{ access_signatures: string; refresh_signeatures: string }> => {
-  let signetures: { access_signatures: string; refresh_signeatures: string } = {
-    access_signatures: "",
-    refresh_signeatures: "",
+export const getSignature = async (
+  signatureLevel: signatureLevelEnum = signatureLevelEnum.bearer
+): Promise<{ access_signature: string; refresh_signature: string }> => {
+  let signatures: { access_signature: string; refresh_signature: string } = {
+    access_signature: "",
+    refresh_signature: "",
   };
-  switch (signetureLevel) {
-    case signetureLevelEnum.System:
-      signetures.access_signatures = process.env
+  switch (signatureLevel) {
+    case signatureLevelEnum.system:
+      signatures.access_signature = process.env
         .ACCESS_SYSTEM_TOKEN_SIGNATURE as string;
-      signetures.refresh_signeatures = process.env
+      signatures.refresh_signature = process.env
         .REFRESH_SYSTEM_TOKEN_SIGNATURE as string;
       break;
     default:
-      signetures.access_signatures = process.env
+      signatures.access_signature = process.env
         .ACCESS_USER_TOKEN_SIGNATURE as string;
-      signetures.refresh_signeatures = process.env
+      signatures.refresh_signature = process.env
         .REFRESH_USER_TOKEN_SIGNATURE as string;
       break;
   }
-  return signetures;
+  return signatures;
 };
-export const createLoginCredentials = async (user: HUserDoucment) => {
-  const jwtid= uuid()
-  const signetureLevel = await detectSignetureLevel(user.role);
-  const signetures = await getSigneture(signetureLevel);
-  const accessToken = await genrateToken({
+
+export const createLoginCredentials = async (
+  user: HUserDocument
+): Promise<{ access_token: string; refresh_token: string }> => {
+  const signatureLevel = await detectSignature(user.role);
+  const signatures = await getSignature(signatureLevel);
+  console.log(signatures);
+
+  const jwtid = uuid();
+  const access_token = await generateToken({
     payload: { _id: user._id },
-    secret: signetures.access_signatures,
-    options: { expiresIn: Number(process.env.Access_TOKEN_EXPIRES_IN),jwtid },
+    secret: signatures.access_signature,
+    options: { expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRES_IN), jwtid },
   });
-  const refreshToken = await genrateToken({
+
+  const refresh_token = await generateToken({
     payload: { _id: user._id },
-    secret: signetures.refresh_signeatures,
-    options: { expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRES_IN),jwtid },
+    secret: signatures.refresh_signature,
+    options: {
+      expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRES_IN),
+      jwtid,
+    },
   });
-  return { accessToken, refreshToken };
+  return { access_token, refresh_token };
 };
 
 export const decodedToken = async ({
   authorization,
-  tokentype = tokenEnum.access,
+  tokenType = TokenEnum.access,
 }: {
   authorization: string;
-  tokentype?: tokenEnum;
+  tokenType?: TokenEnum;
 }) => {
-  const userModel = new UserRepository(UserModel);
-  const tokenmodel = new TokenRepository(TokenModel);
-  const [bearerkey, token] = authorization.split(" ");
-  if (!bearerkey || !token) {
-    throw new unauthorizedException("missing token parts");
+  const userModel = new userRepository(UserModel);
+  const tokenModel = new TokenRepository(TokenModel);
+  const [bearerKey, token] = authorization.split(" ");
+  if (!bearerKey || !token) {
+    throw new UnauthorizedException("Missing Token Parts");
   }
 
-  const signetures = await getSigneture(bearerkey as signetureLevelEnum);
-  const decoded = await verifeyToken({
+  const signatures = await getSignature(bearerKey as signatureLevelEnum);
+  const decoded = await VerifyToken({
     token,
     secret:
-      tokentype === tokenEnum.refresh
-        ? signetures.refresh_signeatures
-        : signetures.access_signatures,
+      tokenType === TokenEnum.refresh
+        ? signatures.refresh_signature
+        : signatures.access_signature,
   });
 
-  if (!decoded?._id) {
-    throw new BadRequestException("invalid token payload");
+  if (!decoded._id || !decoded.iat) {
+    throw new BadRequestException("Invalid Token Payload");
   }
-if (await  tokenmodel.findOne({filter:{jti:decoded.jti}})){
-throw new unauthorizedException("invlid or old credentials")
+  if (await tokenModel.findOne({ filter: { jti: decoded.jti } })) {
+    throw new UnauthorizedException("Invalid Or Old Login Credentials");
+  }
 
-}
   const user = await userModel.findOne({ filter: { _id: decoded._id } });
   if (!user) {
-    throw new BadRequestException("not registered account");
+    throw new BadRequestException("Not Register Account");
   }
 
-  if ((user.changeCredentialsTime?.getTime()||0 )> (decoded.iat as number) *1000){
-throw new unauthorizedException("invlid or old credentials")}
+  if ((user.changeCredentialsTime?.getTime() || 0) > decoded.iat * 1000) {
+    throw new UnauthorizedException("Invalid Or Old Login Credentials");
+  }
+
   return { user, decoded };
 };
 
-
-
-export const createRevokeToken = async (decoded: JwtPayload):Promise<HTokenDocument> => {
+export const createRevokeToken = async (
+  decoded: JwtPayload
+): Promise<HTokenDocument> => {
   const tokenModel = new TokenRepository(TokenModel);
-
-  const [result] = (
-    await tokenModel.create({
+  const [result] =
+    (await tokenModel.create({
       data: [
         {
           jti: decoded.jti as string,
@@ -155,12 +174,9 @@ export const createRevokeToken = async (decoded: JwtPayload):Promise<HTokenDocum
           userId: decoded._id,
         },
       ],
-    })
-  ) || [];
-
+    })) || [];
   if (!result) {
-    throw new BadRequestException("Fail to revoke this token");
+    throw new BadRequestException("Fail To Revoke This Token");
   }
-
   return result;
 };

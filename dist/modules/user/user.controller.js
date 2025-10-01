@@ -38,12 +38,32 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const user_service_1 = __importDefault(require("./user.service"));
-const authentcaion_middleware_1 = require("../middleware/authentcaion.middleware");
-const validation_middleware_1 = require("../middleware/validation.middleware");
-const validators = __importStar(require("./user.validation"));
+const authentication_middleware_1 = require("../../middleware/authentication.middleware");
+const validation_middleware_1 = require("../../middleware/validation.middleware");
+const validator = __importStar(require("./user.validation"));
 const token_security_1 = require("../../utils/security/token.security");
+const cloud_multer_1 = require("../../utils/multer/cloud.multer");
+const user_authorization_1 = require("./user.authorization");
 const router = (0, express_1.Router)();
-router.get("/profile", (0, authentcaion_middleware_1.authentcation)(), user_service_1.default.profile);
-router.post("/refresh_token", (0, authentcaion_middleware_1.authentcation)(token_security_1.tokenEnum.refresh), user_service_1.default.refreshToken);
-router.post("/logout", (0, authentcaion_middleware_1.authentcation)(), (0, validation_middleware_1.validation)(validators.logout), user_service_1.default.logout);
+router.get("/", (0, authentication_middleware_1.authentication)(), user_service_1.default.profile);
+router.get("/dashboard", (0, authentication_middleware_1.authorization)(user_authorization_1.endPoint.dashboard), user_service_1.default.dashboard);
+router.patch("/:userId/change-role", (0, authentication_middleware_1.authorization)(user_authorization_1.endPoint.dashboard), (0, validation_middleware_1.validation)(validator.changeRole), user_service_1.default.changeRole);
+router.delete("{/:userId}/freeze-account", (0, authentication_middleware_1.authentication)(), (0, validation_middleware_1.validation)(validator.freezeAccount), user_service_1.default.freezeAccount);
+router.get("{/:userId}/send-friend-request", (0, authentication_middleware_1.authentication)(), (0, validation_middleware_1.validation)(validator.sendFriendRequest), user_service_1.default.sendFriendRequest);
+router.get("{/:requestId}/accept-friend-request", (0, authentication_middleware_1.authentication)(), (0, validation_middleware_1.validation)(validator.AcceptFriendRequest), user_service_1.default.acceptFriendRequest);
+router.patch("/:userId/restore-account", (0, authentication_middleware_1.authorization)(user_authorization_1.endPoint.restoreAccount), (0, validation_middleware_1.validation)(validator.restoreAccount), user_service_1.default.restoreAccount);
+router.patch("/:userId/restore-account", (0, authentication_middleware_1.authorization)(user_authorization_1.endPoint.restoreAccount), (0, validation_middleware_1.validation)(validator.restoreAccount), user_service_1.default.restoreAccount);
+router.delete("/:userId", (0, authentication_middleware_1.authorization)(user_authorization_1.endPoint.hardDeleteAccount), (0, validation_middleware_1.validation)(validator.hardDeleteAccount), user_service_1.default.hardDeleteAccount);
+router.patch("/profile-image", (0, authentication_middleware_1.authentication)(), user_service_1.default.profileImage);
+router.patch("/profile-cover-image", (0, authentication_middleware_1.authentication)(), (0, cloud_multer_1.cloudFileUpload)({
+    validation: cloud_multer_1.fileValidation.image,
+    storageApproach: cloud_multer_1.StorageEnum.disk,
+}).array("images", 2), user_service_1.default.profileCoverImage);
+router.patch("/profile-image", (0, authentication_middleware_1.authentication)(), user_service_1.default.profileImage);
+router.patch("/update-email", (0, validation_middleware_1.validation)(validator.updateEmail), (0, authentication_middleware_1.authentication)(), user_service_1.default.updateEmail);
+router.patch("/confirm-pending-email", (0, authentication_middleware_1.authentication)(), (0, validation_middleware_1.validation)(validator.confirmPendingEmail), user_service_1.default.confirmPendingEmail);
+router.patch("/update-user", (0, authentication_middleware_1.authentication)(), (0, validation_middleware_1.validation)(validator.updateBasicInfo), user_service_1.default.updateBasicInfo);
+router.post("/logout", (0, authentication_middleware_1.authentication)(), (0, validation_middleware_1.validation)(validator.logout), user_service_1.default.logout);
+router.post("/refresh-token", (0, authentication_middleware_1.authentication)(token_security_1.TokenEnum.refresh), user_service_1.default.refreshToken);
+router.patch("/update-password", (0, validation_middleware_1.validation)(validator.updatePassword), (0, authentication_middleware_1.authentication)(), user_service_1.default.updatePassword);
 exports.default = router;

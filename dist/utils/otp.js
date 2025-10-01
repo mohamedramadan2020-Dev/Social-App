@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.genrateNumperOtp = void 0;
-const genrateNumperOtp = () => {
+exports.generateOtp = void 0;
+const generateOtp = () => {
     return Math.floor(Math.random() * (999999 - 100000 + 1) + 100000);
 };
-exports.genrateNumperOtp = genrateNumperOtp;
+exports.generateOtp = generateOtp;

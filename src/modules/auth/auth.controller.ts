@@ -1,41 +1,49 @@
 import { Router } from "express";
-import authservice from "./auth.service";
-import { validation } from "../middleware/validation.middleware";
+import { validation } from "../../middleware/validation.middleware";
 import * as validators from "./auth.validation";
+import authService from "./auth.service";
 const router: Router = Router();
-router.post("/signup", validation(validators.signup), authservice.signup);
+
+router.post("/signup", validation(validators.signup), authService.signup);
+
+
 router.patch(
   "/confirm-email",
   validation(validators.confirmEmail),
-  authservice.confirmEmail
+  authService.confirmEmail
 );
+
+
+router.post("/login", validation(validators.login), authService.login);
+
 
 router.post(
   "/signup-gmail",
-  validation(validators.signupWIthGmail),
-  authservice.signupWIthGmail
+  validation(validators.signupWithGmail),
+  authService.signupWithGmail
 );
 router.post(
   "/login-gmail",
-  validation(validators.signupWIthGmail),
-  authservice.loginWIthGmail
+  validation(validators.signupWithGmail),
+  authService.loginWithGmail
 );
 
-router.post("/login", validation(validators.login), authservice.login);
+
 
 router.patch(
   "/send-forgot-password",
   validation(validators.sendForgotPasswordCode),
-  authservice.sendForgotCode
+  authService.sendForgotCode
 );
 router.patch(
-  "/verify-forgot-password",
-  validation(validators.verfiyForgotPasswordCode),
-  authservice.verifyForgotCode
+  "/send-verify-password",
+  validation(validators.verifyPasswordCode),
+  authService.verifyPasswordCode
 );
 router.patch(
-  "/reset-forgot-password",
-  validation(validators.resetForgotPasswordCode),
-  authservice.resetForgotCode
+  "/reset-verify-password",
+  validation(validators.resetVerifyPassword),
+  authService.resetVerifyPassword
 );
+
 export default router;

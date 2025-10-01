@@ -1,13 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.globalErrorHandling = exports.conflictException = exports.forbiddenException = exports.unauthorizedException = exports.NotFoundException = exports.BadRequestException = exports.ApplicationException = void 0;
+exports.globalErrorHandling = exports.conflictException = exports.NotFoundRequestException = exports.ForbiddenException = exports.UnauthorizedException = exports.BadRequestException = exports.ApplicationException = void 0;
 class ApplicationException extends Error {
     statusCode;
     constructor(message, statusCode = 400, cause) {
         super(message, { cause });
         this.statusCode = statusCode;
-        this.name = this.constructor.name;
-        Error.captureStackTrace(this, this.constructor);
+        (this.name = this.constructor.name),
+            Error.captureStackTrace(this, this.constructor);
     }
 }
 exports.ApplicationException = ApplicationException;
@@ -17,24 +17,24 @@ class BadRequestException extends ApplicationException {
     }
 }
 exports.BadRequestException = BadRequestException;
-class NotFoundException extends ApplicationException {
-    constructor(message, cause) {
-        super(message, 404, cause);
-    }
-}
-exports.NotFoundException = NotFoundException;
-class unauthorizedException extends ApplicationException {
+class UnauthorizedException extends ApplicationException {
     constructor(message, cause) {
         super(message, 401, cause);
     }
 }
-exports.unauthorizedException = unauthorizedException;
-class forbiddenException extends ApplicationException {
+exports.UnauthorizedException = UnauthorizedException;
+class ForbiddenException extends ApplicationException {
     constructor(message, cause) {
         super(message, 403, cause);
     }
 }
-exports.forbiddenException = forbiddenException;
+exports.ForbiddenException = ForbiddenException;
+class NotFoundRequestException extends ApplicationException {
+    constructor(message, cause) {
+        super(message, 404, cause);
+    }
+}
+exports.NotFoundRequestException = NotFoundRequestException;
 class conflictException extends ApplicationException {
     constructor(message, cause) {
         super(message, 409, cause);
@@ -42,11 +42,11 @@ class conflictException extends ApplicationException {
 }
 exports.conflictException = conflictException;
 const globalErrorHandling = (error, req, res, next) => {
-    res.status(error.statusCode || 500).json({
-        err_message: error.message || "something went wrong",
-        stack: process.env.MOOD === "development" ? error.stack : "undefiend",
-        error,
+    return res.status(error.statusCode || 500).json({
+        err_message: error.message || "something went wrong !!",
+        stack: process.env.MOOD === "development" ? error.stack : undefined,
         cause: error.cause,
+        error,
     });
 };
 exports.globalErrorHandling = globalErrorHandling;

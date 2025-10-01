@@ -1,120 +1,126 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createRevokeToken = exports.decodedToken = exports.createLoginCredentials = exports.getSigneture = exports.detectSignetureLevel = exports.verifeyToken = exports.genrateToken = exports.logoutEnum = exports.tokenEnum = exports.signetureLevelEnum = void 0;
+exports.createRevokeToken = exports.decodedToken = exports.createLoginCredentials = exports.getSignature = exports.detectSignature = exports.VerifyToken = exports.generateToken = exports.LogoutEnum = exports.TokenEnum = exports.signatureLevelEnum = void 0;
 const uuid_1 = require("uuid");
 const jsonwebtoken_1 = require("jsonwebtoken");
-const User_model_1 = require("../../DB/model/User.model");
+const user_model_1 = require("../../DB/model/user.model");
 const error_response_1 = require("../response/error.response");
-const userModel_repository_1 = require("../../DB/repository/userModel.repository");
+const repository_1 = require("../../DB/repository/");
 const token_model_1 = require("../../DB/model/token.model");
-const token_repository_1 = require("../../DB/repository/token.repository");
-var signetureLevelEnum;
-(function (signetureLevelEnum) {
-    signetureLevelEnum["Bearer"] = "Bearer";
-    signetureLevelEnum["System"] = "System";
-})(signetureLevelEnum || (exports.signetureLevelEnum = signetureLevelEnum = {}));
-var tokenEnum;
-(function (tokenEnum) {
-    tokenEnum["access"] = "access";
-    tokenEnum["refresh"] = "refresh";
-})(tokenEnum || (exports.tokenEnum = tokenEnum = {}));
-var logoutEnum;
-(function (logoutEnum) {
-    logoutEnum["only"] = "only";
-    logoutEnum["all"] = "all";
-})(logoutEnum || (exports.logoutEnum = logoutEnum = {}));
-const genrateToken = async ({ payload, secret = process.env.ACCESS_USER_TOKEN_SIGNATURE, options = { expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRES_IN) }, }) => {
+var signatureLevelEnum;
+(function (signatureLevelEnum) {
+    signatureLevelEnum["bearer"] = "Bearer";
+    signatureLevelEnum["system"] = "System";
+})(signatureLevelEnum || (exports.signatureLevelEnum = signatureLevelEnum = {}));
+var TokenEnum;
+(function (TokenEnum) {
+    TokenEnum["access"] = "access";
+    TokenEnum["refresh"] = "refresh";
+})(TokenEnum || (exports.TokenEnum = TokenEnum = {}));
+var LogoutEnum;
+(function (LogoutEnum) {
+    LogoutEnum["only"] = "only";
+    LogoutEnum["all"] = "all";
+})(LogoutEnum || (exports.LogoutEnum = LogoutEnum = {}));
+const generateToken = async ({ payload, secret = process.env.ACCESS_USER_TOKEN_SIGNATURE, options = {
+    expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRES_IN),
+}, }) => {
     return (0, jsonwebtoken_1.sign)(payload, secret, options);
 };
-exports.genrateToken = genrateToken;
-const verifeyToken = async ({ token, secret = process.env.ACCESS_USER_TOKEN_SIGNATURE, }) => {
+exports.generateToken = generateToken;
+const VerifyToken = async ({ token, secret = process.env.ACCESS_USER_TOKEN_SIGNATURE, }) => {
     return (0, jsonwebtoken_1.verify)(token, secret);
 };
-exports.verifeyToken = verifeyToken;
-const detectSignetureLevel = async (role = User_model_1.RoleEnum.user) => {
-    let signetureLevel = signetureLevelEnum.Bearer;
+exports.VerifyToken = VerifyToken;
+const detectSignature = async (role = user_model_1.RoleEnum.user) => {
+    let signatureLevel = signatureLevelEnum.bearer;
     switch (role) {
-        case User_model_1.RoleEnum.admin:
-            signetureLevel = signetureLevelEnum.System;
+        case user_model_1.RoleEnum.admin:
+        case user_model_1.RoleEnum.superAdmin:
+            signatureLevel = signatureLevelEnum.system;
             break;
         default:
-            signetureLevel = signetureLevelEnum.Bearer;
+            signatureLevel = signatureLevelEnum.bearer;
             break;
     }
-    return signetureLevel;
+    return signatureLevel;
 };
-exports.detectSignetureLevel = detectSignetureLevel;
-const getSigneture = async (signetureLevel = signetureLevelEnum.Bearer) => {
-    let signetures = {
-        access_signatures: "",
-        refresh_signeatures: "",
+exports.detectSignature = detectSignature;
+const getSignature = async (signatureLevel = signatureLevelEnum.bearer) => {
+    let signatures = {
+        access_signature: "",
+        refresh_signature: "",
     };
-    switch (signetureLevel) {
-        case signetureLevelEnum.System:
-            signetures.access_signatures = process.env
+    switch (signatureLevel) {
+        case signatureLevelEnum.system:
+            signatures.access_signature = process.env
                 .ACCESS_SYSTEM_TOKEN_SIGNATURE;
-            signetures.refresh_signeatures = process.env
+            signatures.refresh_signature = process.env
                 .REFRESH_SYSTEM_TOKEN_SIGNATURE;
             break;
         default:
-            signetures.access_signatures = process.env
+            signatures.access_signature = process.env
                 .ACCESS_USER_TOKEN_SIGNATURE;
-            signetures.refresh_signeatures = process.env
+            signatures.refresh_signature = process.env
                 .REFRESH_USER_TOKEN_SIGNATURE;
             break;
     }
-    return signetures;
+    return signatures;
 };
-exports.getSigneture = getSigneture;
+exports.getSignature = getSignature;
 const createLoginCredentials = async (user) => {
+    const signatureLevel = await (0, exports.detectSignature)(user.role);
+    const signatures = await (0, exports.getSignature)(signatureLevel);
+    console.log(signatures);
     const jwtid = (0, uuid_1.v4)();
-    const signetureLevel = await (0, exports.detectSignetureLevel)(user.role);
-    const signetures = await (0, exports.getSigneture)(signetureLevel);
-    const accessToken = await (0, exports.genrateToken)({
+    const access_token = await (0, exports.generateToken)({
         payload: { _id: user._id },
-        secret: signetures.access_signatures,
-        options: { expiresIn: Number(process.env.Access_TOKEN_EXPIRES_IN), jwtid },
+        secret: signatures.access_signature,
+        options: { expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRES_IN), jwtid },
     });
-    const refreshToken = await (0, exports.genrateToken)({
+    const refresh_token = await (0, exports.generateToken)({
         payload: { _id: user._id },
-        secret: signetures.refresh_signeatures,
-        options: { expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRES_IN), jwtid },
+        secret: signatures.refresh_signature,
+        options: {
+            expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRES_IN),
+            jwtid,
+        },
     });
-    return { accessToken, refreshToken };
+    return { access_token, refresh_token };
 };
 exports.createLoginCredentials = createLoginCredentials;
-const decodedToken = async ({ authorization, tokentype = tokenEnum.access, }) => {
-    const userModel = new userModel_repository_1.UserRepository(User_model_1.UserModel);
-    const tokenmodel = new token_repository_1.TokenRepository(token_model_1.TokenModel);
-    const [bearerkey, token] = authorization.split(" ");
-    if (!bearerkey || !token) {
-        throw new error_response_1.unauthorizedException("missing token parts");
+const decodedToken = async ({ authorization, tokenType = TokenEnum.access, }) => {
+    const userModel = new repository_1.userRepository(user_model_1.UserModel);
+    const tokenModel = new repository_1.TokenRepository(token_model_1.TokenModel);
+    const [bearerKey, token] = authorization.split(" ");
+    if (!bearerKey || !token) {
+        throw new error_response_1.UnauthorizedException("Missing Token Parts");
     }
-    const signetures = await (0, exports.getSigneture)(bearerkey);
-    const decoded = await (0, exports.verifeyToken)({
+    const signatures = await (0, exports.getSignature)(bearerKey);
+    const decoded = await (0, exports.VerifyToken)({
         token,
-        secret: tokentype === tokenEnum.refresh
-            ? signetures.refresh_signeatures
-            : signetures.access_signatures,
+        secret: tokenType === TokenEnum.refresh
+            ? signatures.refresh_signature
+            : signatures.access_signature,
     });
-    if (!decoded?._id) {
-        throw new error_response_1.BadRequestException("invalid token payload");
+    if (!decoded._id || !decoded.iat) {
+        throw new error_response_1.BadRequestException("Invalid Token Payload");
     }
-    if (await tokenmodel.findOne({ filter: { jti: decoded.jti } })) {
-        throw new error_response_1.unauthorizedException("invlid or old credentials");
+    if (await tokenModel.findOne({ filter: { jti: decoded.jti } })) {
+        throw new error_response_1.UnauthorizedException("Invalid Or Old Login Credentials");
     }
     const user = await userModel.findOne({ filter: { _id: decoded._id } });
     if (!user) {
-        throw new error_response_1.BadRequestException("not registered account");
+        throw new error_response_1.BadRequestException("Not Register Account");
     }
     if ((user.changeCredentialsTime?.getTime() || 0) > decoded.iat * 1000) {
-        throw new error_response_1.unauthorizedException("invlid or old credentials");
+        throw new error_response_1.UnauthorizedException("Invalid Or Old Login Credentials");
     }
     return { user, decoded };
 };
 exports.decodedToken = decodedToken;
 const createRevokeToken = async (decoded) => {
-    const tokenModel = new token_repository_1.TokenRepository(token_model_1.TokenModel);
+    const tokenModel = new repository_1.TokenRepository(token_model_1.TokenModel);
     const [result] = (await tokenModel.create({
         data: [
             {
@@ -126,7 +132,7 @@ const createRevokeToken = async (decoded) => {
         ],
     })) || [];
     if (!result) {
-        throw new error_response_1.BadRequestException("Fail to revoke this token");
+        throw new error_response_1.BadRequestException("Fail To Revoke This Token");
     }
     return result;
 };
